@@ -69,6 +69,16 @@ function generateExercises(subLesson, lessonId, subLessonId) {
         options: generateOptions(vocab.word, subLesson.vocabulary.map(v => v.word))
       });
     });
+
+    // Add typing exercises for reinforcement
+    subLesson.vocabulary.slice(0, 3).forEach(vocab => {
+      exerciseList.push({
+        type: 'type-polish',
+        data: vocab,
+        prompt: vocab.meaning,
+        answer: vocab.word
+      });
+    });
   }
 
   if (subLesson.grammar && subLesson.exercises) {
@@ -145,6 +155,9 @@ async function renderCurrentExercise(container, lessonId, subLessonId) {
       break;
     case 'fill-blank':
       renderFillBlank(contentEl, exercise, container, lessonId, subLessonId);
+      break;
+    case 'type-polish':
+      renderTypePolish(contentEl, exercise, container, lessonId, subLessonId);
       break;
     case 'gender-match':
       renderGenderMatch(contentEl, exercise, container, lessonId, subLessonId);
@@ -320,6 +333,83 @@ function renderFillBlank(contentEl, exercise, container, lessonId, subLessonId) 
     if (isCorrect) await incrementStats('correctAnswers');
 
     checkBtn.classList.add('hidden');
+    continueBtn.classList.remove('hidden');
+  };
+
+  checkBtn.addEventListener('click', checkAnswer);
+  input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') checkAnswer();
+  });
+
+  continueBtn.addEventListener('click', () => {
+    currentExerciseIndex++;
+    renderCurrentExercise(container, lessonId, subLessonId);
+  });
+
+  input.focus();
+}
+
+function renderTypePolish(contentEl, exercise, container, lessonId, subLessonId) {
+  const polishChars = ['ą', 'ć', 'ę', 'ł', 'ń', 'ó', 'ś', 'ź', 'ż'];
+  
+  contentEl.innerHTML = `
+    <div class="exercise-hint">Type the Polish word</div>
+    <div class="exercise-prompt">${exercise.prompt}</div>
+    <input type="text" class="exercise-input" id="answer-input" placeholder="Type in Polish..." autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="polish-keyboard" id="polish-keyboard">
+      ${polishChars.map(char => `<button class="polish-char-btn" data-char="${char}">${char}</button>`).join('')}
+    </div>
+    <div class="exercise-actions">
+      <div class="exercise-feedback hidden" id="feedback"></div>
+      <button class="btn btn-full btn-lg" id="check-btn">Check</button>
+      <button class="btn btn-full btn-lg hidden" id="continue-btn">Continue</button>
+    </div>
+  `;
+
+  const input = contentEl.querySelector('#answer-input');
+  const checkBtn = contentEl.querySelector('#check-btn');
+  const continueBtn = contentEl.querySelector('#continue-btn');
+  const feedback = contentEl.querySelector('#feedback');
+
+  // Polish character buttons
+  contentEl.querySelectorAll('.polish-char-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const char = btn.dataset.char;
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      input.value = input.value.substring(0, start) + char + input.value.substring(end);
+      input.focus();
+      input.selectionStart = input.selectionEnd = start + 1;
+    });
+  });
+
+  const normalizePolish = (str) => {
+    return str.trim().toLowerCase();
+  };
+
+  const checkAnswer = async () => {
+    const userAnswer = normalizePolish(input.value);
+    const correctAnswer = normalizePolish(exercise.answer);
+    const isCorrect = userAnswer === correctAnswer;
+
+    input.classList.add(isCorrect ? 'correct' : 'incorrect');
+    input.disabled = true;
+
+    feedback.classList.remove('hidden');
+    feedback.classList.add(isCorrect ? 'correct' : 'incorrect');
+    feedback.textContent = isCorrect ? 'Correct!' : `Correct answer: ${exercise.answer}`;
+
+    if (isCorrect) {
+      correctCount++;
+      await addXP(15); // Typing gives more XP
+      updateHeaderStats();
+    }
+
+    await incrementStats('totalReviews');
+    if (isCorrect) await incrementStats('correctAnswers');
+
+    checkBtn.classList.add('hidden');
+    contentEl.querySelector('#polish-keyboard').classList.add('hidden');
     continueBtn.classList.remove('hidden');
   };
 

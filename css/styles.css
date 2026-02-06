@@ -809,6 +809,41 @@ body {
   animation: pulse 300ms ease;
 }
 
+/* Polish Character Keyboard */
+.polish-keyboard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin: 16px 0;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+}
+
+.polish-char-btn {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.polish-char-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+
+.polish-char-btn:active {
+  transform: scale(0.95);
+  background: var(--accent);
+}
+
 /* Responsive */
 @media (min-width: 481px) {
   #app {
