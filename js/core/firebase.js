@@ -1,13 +1,21 @@
 // Firebase configuration and sync functionality
-// Replace these values with your Firebase project config
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCgEfFEaumlX6DMPsl5EpAIPYe4rjWjG_c",
-  authDomain: "polski-app.firebaseapp.com",
-  projectId: "polski-app",
-  storageBucket: "polski-app.firebasestorage.app",
-  messagingSenderId: "156315529833",
-  appId: "1:156315529833:web:f9e261e25996a3464fa8f8"
-};
+// Config is loaded from firebase-config.js (not committed to repo)
+let FIREBASE_CONFIG = null;
+
+// Try to load config from separate file
+try {
+  const configScript = document.querySelector('script[data-firebase-config]');
+  if (configScript) {
+    FIREBASE_CONFIG = JSON.parse(configScript.dataset.firebaseConfig);
+  }
+} catch (e) {
+  console.warn('Firebase config not found');
+}
+
+// Fallback: load from window if set by external script
+if (!FIREBASE_CONFIG && window.FIREBASE_CONFIG) {
+  FIREBASE_CONFIG = window.FIREBASE_CONFIG;
+}
 
 let app = null;
 let db = null;
