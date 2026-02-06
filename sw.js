@@ -1,27 +1,28 @@
-const CACHE_NAME = 'polski-v2';
+const CACHE_NAME = 'polski-v3';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/css/styles.css',
-  '/js/app.js',
-  '/js/router.js',
-  '/js/core/storage.js',
-  '/js/core/progress.js',
-  '/js/core/srs.js',
-  '/js/core/firebase.js',
-  '/js/core/sync.js',
-  '/js/data/lessons.js',
-  '/js/data/vocabulary.js',
-  '/js/data/sounds.js',
-  '/js/data/grammar.js',
-  '/js/views/home.js',
-  '/js/views/lessons.js',
-  '/js/views/lesson.js',
-  '/js/views/review.js',
-  '/js/views/reference.js',
-  '/js/views/settings.js',
-  '/js/exercises/base.js',
-  '/manifest.json'
+  './',
+  './index.html',
+  './css/styles.css',
+  './js/app.js',
+  './js/router.js',
+  './js/core/storage.js',
+  './js/core/progress.js',
+  './js/core/srs.js',
+  './js/core/firebase.js',
+  './js/core/sync.js',
+  './js/data/lessons.js',
+  './js/data/vocabulary.js',
+  './js/data/sounds.js',
+  './js/data/grammar.js',
+  './js/views/home.js',
+  './js/views/lessons.js',
+  './js/views/lesson.js',
+  './js/views/review.js',
+  './js/views/reference.js',
+  './js/views/settings.js',
+  './js/exercises/base.js',
+  './firebase-config.js',
+  './manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
@@ -56,7 +57,7 @@ self.addEventListener('fetch', (event) => {
       });
     }).catch(() => {
       if (event.request.destination === 'document') {
-        return caches.match('/index.html');
+        return caches.match('./index.html');
       }
     })
   );
