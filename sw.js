@@ -1,4 +1,4 @@
-const CACHE_NAME = 'polski-v4';
+const CACHE_NAME = 'polski-v5';
 const ASSETS = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const ASSETS = [
   './js/core/srs.js',
   './js/core/firebase.js',
   './js/core/sync.js',
+  './js/core/tts.js',
   './js/data/lessons.js',
   './js/data/vocabulary.js',
   './js/data/sounds.js',

@@ -8,9 +8,11 @@ import { renderReview } from './views/review.js';
 import { renderReference } from './views/reference.js';
 import { renderSounds } from './views/sounds.js';
 import { renderSettings } from './views/settings.js';
+import { initTTS, isMuted, toggleMute } from './core/tts.js';
 
 async function init() {
   await initDB();
+  initTTS();
 
   router.register('home', renderHome);
   router.register('lessons', renderLessons);
@@ -23,6 +25,7 @@ async function init() {
 
   setupNavigation();
   setupBackButton();
+  setupMuteButton();
 
   await updateHeaderStats();
   await router.navigate('home');
@@ -52,10 +55,31 @@ function setupBackButton() {
   });
 }
 
+function setupMuteButton() {
+  document.getElementById('mute-btn').addEventListener('click', () => {
+    handleMuteToggle();
+  });
+  updateMuteButton();
+}
+
 export async function updateHeaderStats() {
   const progress = await getProgress();
   document.getElementById('streak-display').textContent = `🔥 ${progress.streak}`;
   document.getElementById('xp-display').textContent = `✦ ${progress.xp}`;
+  updateMuteButton();
+}
+
+function updateMuteButton() {
+  const btn = document.getElementById('mute-btn');
+  if (btn) {
+    btn.textContent = isMuted() ? '🔇' : '🔊';
+    btn.title = isMuted() ? 'Sound off' : 'Sound on';
+  }
+}
+
+export function handleMuteToggle() {
+  toggleMute();
+  updateMuteButton();
 }
 
 export function showToast(message, type = 'info') {
@@ -70,7 +94,7 @@ export function showToast(message, type = 'info') {
 
 function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('./sw.js')
       .then(reg => console.log('SW registered'))
       .catch(err => console.log('SW registration failed:', err));
   }

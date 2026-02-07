@@ -4,6 +4,7 @@ import { addXP, updateStreak, updateLessonProgress, unlockAchievement, increment
 import { set, STORES } from '../core/storage.js';
 import { createVocabularyCard } from '../core/srs.js';
 import { showToast, updateHeaderStats } from '../app.js';
+import { speak, speakWithCallback, isMuted } from '../core/tts.js';
 
 let currentExerciseIndex = 0;
 let exercises = [];
@@ -173,15 +174,21 @@ async function renderCurrentExercise(container, lessonId, subLessonId) {
 function renderDialogue(contentEl, dialogue, container, lessonId, subLessonId) {
   let html = `
     <div class="exercise-prompt">Study this dialogue</div>
+    <div class="dialogue-controls">
+      <button class="btn btn-secondary btn-sm" id="play-all-btn">🔊 Play All</button>
+    </div>
     <div class="dialogue-container">
   `;
 
-  dialogue.lines.forEach(line => {
+  dialogue.lines.forEach((line, idx) => {
     html += `
       <div class="dialogue-line">
         <div class="dialogue-speaker">${line.speaker}:</div>
-        <div>
-          <div class="dialogue-text">${line.polish}</div>
+        <div class="dialogue-content">
+          <div class="dialogue-text">
+            <span>${line.polish}</span>
+            <button class="speak-btn" data-text="${line.polish.replace(/"/g, '&quot;')}" title="Listen">🔊</button>
+          </div>
           <div class="dialogue-translation">${line.english}</div>
         </div>
       </div>
@@ -197,6 +204,30 @@ function renderDialogue(contentEl, dialogue, container, lessonId, subLessonId) {
 
   contentEl.innerHTML = html;
 
+  // Individual speak buttons
+  contentEl.querySelectorAll('.speak-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      speak(btn.dataset.text);
+    });
+  });
+
+  // Play all dialogue
+  contentEl.querySelector('#play-all-btn').addEventListener('click', () => {
+    const lines = dialogue.lines.map(l => l.polish);
+    let idx = 0;
+    
+    const playNext = () => {
+      if (idx < lines.length) {
+        speakWithCallback(lines[idx], () => {
+          idx++;
+          setTimeout(playNext, 300);
+        }, 0.85);
+      }
+    };
+    playNext();
+  });
+
   contentEl.querySelector('#continue-btn').addEventListener('click', () => {
     currentExerciseIndex++;
     renderCurrentExercise(container, lessonId, subLessonId);
@@ -206,8 +237,11 @@ function renderDialogue(contentEl, dialogue, container, lessonId, subLessonId) {
 function renderVocabIntro(contentEl, vocab, container, lessonId, subLessonId) {
   contentEl.innerHTML = `
     <div class="exercise-prompt">New Word</div>
-    <div class="flashcard" style="cursor: default;">
-      <div class="flashcard-word">${vocab.word}</div>
+    <div class="flashcard vocab-card" style="cursor: default;">
+      <div class="flashcard-word">
+        ${vocab.word}
+        <button class="speak-btn speak-btn-lg" data-text="${vocab.word}" title="Listen">🔊</button>
+      </div>
       ${vocab.gender ? `<div class="flashcard-info" style="margin-bottom: 12px;">${vocab.gender}</div>` : ''}
       <div class="flashcard-meaning">${vocab.meaning}</div>
       ${vocab.example ? `<div style="margin-top: 16px; font-size: 0.875rem; color: var(--text-secondary); font-style: italic;">"${vocab.example}"</div>` : ''}
@@ -216,6 +250,12 @@ function renderVocabIntro(contentEl, vocab, container, lessonId, subLessonId) {
       <button class="btn btn-full btn-lg" id="continue-btn">Got it!</button>
     </div>
   `;
+
+  // Speak button
+  contentEl.querySelector('.speak-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    speak(vocab.word);
+  });
 
   contentEl.querySelector('#continue-btn').addEventListener('click', async () => {
     const card = createVocabularyCard(vocab.word, vocab.meaning, `${lessonId}.${subLessonId}`, {

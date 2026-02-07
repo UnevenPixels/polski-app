@@ -809,6 +809,51 @@ body {
   animation: pulse 300ms ease;
 }
 
+/* Speak Buttons */
+.speak-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  opacity: 0.6;
+  padding: 4px;
+  margin-left: 4px;
+  transition: opacity var(--transition);
+  vertical-align: middle;
+}
+
+.speak-btn:hover {
+  opacity: 1;
+}
+
+.speak-btn-lg {
+  font-size: 1.25rem;
+  margin-left: 8px;
+}
+
+.dialogue-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.dialogue-content {
+  flex: 1;
+}
+
+.dialogue-text {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vocab-card .flashcard-word {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
 /* Polish Character Keyboard */
 .polish-keyboard {
   display: flex;
