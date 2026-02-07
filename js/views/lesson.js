@@ -9,7 +9,7 @@ import { speak, speakWithCallback, isMuted } from '../core/tts.js';
 let currentExerciseIndex = 0;
 let exercises = [];
 let correctCount = 0;
-let totalCount = 0;
+let gradedCount = 0; // Only count exercises that are graded
 
 export async function renderLesson(params) {
   const { lessonId, subLessonId } = params;
@@ -23,7 +23,10 @@ export async function renderLesson(params) {
   currentExerciseIndex = 0;
   correctCount = 0;
   exercises = generateExercises(subLesson, lessonId, subLessonId);
-  totalCount = exercises.length;
+  
+  // Only count graded exercises (not dialogue or vocab-intro)
+  const gradedTypes = ['translate-to-english', 'translate-to-polish', 'type-polish', 'fill-blank', 'gender-match'];
+  gradedCount = exercises.filter(ex => gradedTypes.includes(ex.type)).length;
 
   const container = document.createElement('div');
   container.className = 'exercise-container';
@@ -126,7 +129,7 @@ async function renderCurrentExercise(container, lessonId, subLessonId) {
   }
 
   const exercise = exercises[currentExerciseIndex];
-  const progress = ((currentExerciseIndex) / totalCount) * 100;
+  const progress = ((currentExerciseIndex) / exercises.length) * 100;
 
   container.innerHTML = `
     <div class="exercise-progress">
@@ -134,8 +137,8 @@ async function renderCurrentExercise(container, lessonId, subLessonId) {
         <div class="progress-fill" style="width: ${progress}%"></div>
       </div>
       <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.875rem; color: var(--text-secondary);">
-        <span>${currentExerciseIndex + 1} / ${totalCount}</span>
-        <span>${correctCount} correct</span>
+        <span>${currentExerciseIndex + 1} / ${exercises.length}</span>
+        <span>${correctCount}/${gradedCount} correct</span>
       </div>
     </div>
     <div class="exercise-content" id="exercise-content"></div>
@@ -538,7 +541,7 @@ function renderComplete(contentEl, data, container, lessonId, subLessonId) {
 }
 
 async function completeLesson(container, lessonId, subLessonId) {
-  const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+  const accuracy = gradedCount > 0 ? Math.round((correctCount / gradedCount) * 100) : 100;
   const xpEarned = 50 + correctCount * 5;
 
   await addXP(xpEarned);

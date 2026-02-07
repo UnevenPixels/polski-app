@@ -1,4 +1,4 @@
-const CACHE_NAME = 'polski-v5';
+const CACHE_NAME = 'polski-v6';
 const ASSETS = [
   './',
   './index.html',
