@@ -8,11 +8,14 @@ import { renderReview } from './views/review.js';
 import { renderReference } from './views/reference.js';
 import { renderSounds } from './views/sounds.js';
 import { renderSettings } from './views/settings.js';
+import { renderStats } from './views/stats.js';
 import { initTTS, isMuted, toggleMute } from './core/tts.js';
+import { initReminders } from './core/reminders.js';
 
 async function init() {
   await initDB();
   initTTS();
+  initReminders();
 
   router.register('home', renderHome);
   router.register('lessons', renderLessons);
@@ -22,6 +25,7 @@ async function init() {
   router.register('reference', renderReference);
   router.register('sounds', renderSounds);
   router.register('settings', renderSettings);
+  router.register('stats', renderStats);
 
   setupNavigation();
   setupBackButton();

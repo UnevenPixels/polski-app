@@ -13,17 +13,71 @@ import {
   loadFromCloud
 } from '../core/firebase.js';
 import { getAll, set, STORES } from '../core/storage.js';
+import { 
+  getReminderSettings, 
+  enableReminders, 
+  disableReminders, 
+  updateReminderTime,
+  canSendNotifications 
+} from '../core/reminders.js';
 
 export async function renderSettings() {
   const progress = await getProgress();
   await initFirebase();
   const user = getCurrentUser();
   const syncActive = isSyncEnabled();
+  const reminderSettings = getReminderSettings();
+  const notificationsSupported = 'Notification' in window;
   
   const container = document.createElement('div');
   container.className = 'settings-view';
 
   container.innerHTML = `
+    <div class="card" id="stats-card" style="cursor: pointer;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div class="card-title">Progress Charts</div>
+          <div class="card-subtitle">View detailed stats and history</div>
+        </div>
+        <div style="font-size: 1.5rem;">📊</div>
+      </div>
+    </div>
+
+    <h3 style="margin: 20px 0 12px; font-size: 0.875rem; color: var(--text-secondary); text-transform: uppercase;">
+      Daily Reminders
+    </h3>
+
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div>
+          <div style="font-weight: 600;">Practice Reminders</div>
+          <div style="font-size: 0.875rem; color: var(--text-secondary);">
+            ${!notificationsSupported ? 'Not supported in this browser' : 
+              reminderSettings.enabled ? 'Daily at ' + reminderSettings.time : 'Disabled'}
+          </div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="reminder-toggle" 
+            ${reminderSettings.enabled ? 'checked' : ''} 
+            ${!notificationsSupported ? 'disabled' : ''}>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      ${notificationsSupported ? `
+        <div id="reminder-time-section" style="display: ${reminderSettings.enabled ? 'block' : 'none'};">
+          <label style="font-size: 0.875rem; color: var(--text-secondary); display: block; margin-bottom: 8px;">
+            Reminder Time
+          </label>
+          <input type="time" id="reminder-time" value="${reminderSettings.time}"
+            style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 1rem;">
+        </div>
+      ` : ''}
+    </div>
+
+    <h3 style="margin: 20px 0 12px; font-size: 0.875rem; color: var(--text-secondary); text-transform: uppercase;">
+      Cloud Sync
+    </h3>
+
     <div class="card">
       <div class="card-title">Cloud Sync</div>
       <div id="sync-status" style="margin-top: 8px;">
@@ -274,6 +328,45 @@ export async function renderSettings() {
       }
     }
   });
+
+  container.querySelector('#stats-card').addEventListener('click', () => {
+    router.navigate('stats', { title: 'Statistics' });
+  });
+
+  const reminderToggle = container.querySelector('#reminder-toggle');
+  const reminderTimeInput = container.querySelector('#reminder-time');
+  const reminderTimeSection = container.querySelector('#reminder-time-section');
+
+  if (reminderToggle) {
+    reminderToggle.addEventListener('change', async () => {
+      if (reminderToggle.checked) {
+        const time = reminderTimeInput?.value || '19:00';
+        const result = await enableReminders(time);
+        if (result.success) {
+          showToast('Reminders enabled!', 'success');
+          if (reminderTimeSection) reminderTimeSection.style.display = 'block';
+        } else {
+          reminderToggle.checked = false;
+          if (result.reason === 'denied') {
+            showToast('Notification permission denied', 'error');
+          } else {
+            showToast('Could not enable notifications', 'error');
+          }
+        }
+      } else {
+        disableReminders();
+        if (reminderTimeSection) reminderTimeSection.style.display = 'none';
+        showToast('Reminders disabled', 'success');
+      }
+    });
+  }
+
+  if (reminderTimeInput) {
+    reminderTimeInput.addEventListener('change', () => {
+      updateReminderTime(reminderTimeInput.value);
+      showToast('Reminder time updated', 'success');
+    });
+  }
 
   return container;
 }

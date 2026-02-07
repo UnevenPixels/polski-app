@@ -15,7 +15,8 @@ const DEFAULT_PROGRESS = {
     correctAnswers: 0,
     lessonsCompleted: 0,
     wordsLearned: 0
-  }
+  },
+  dailyHistory: []
 };
 
 const XP_PER_LEVEL = [
@@ -71,9 +72,29 @@ export async function addXP(amount) {
   
   const leveledUp = newLevel > progress.level;
   
-  await updateProgress({ xp: newXP, level: newLevel });
+  const dailyHistory = await updateDailyHistory(progress.dailyHistory || [], amount);
+  
+  await updateProgress({ xp: newXP, level: newLevel, dailyHistory });
   
   return { xp: newXP, level: newLevel, leveledUp, xpGained: amount };
+}
+
+async function updateDailyHistory(history, xpGained) {
+  const today = new Date().toISOString().split('T')[0];
+  const updated = [...(history || [])];
+  
+  const todayEntry = updated.find(entry => entry.date === today);
+  if (todayEntry) {
+    todayEntry.xp += xpGained;
+  } else {
+    updated.push({ date: today, xp: xpGained });
+  }
+  
+  if (updated.length > 90) {
+    updated.splice(0, updated.length - 90);
+  }
+  
+  return updated;
 }
 
 export async function updateStreak() {
@@ -184,6 +205,46 @@ export function getLevelProgress(xp, level) {
 export function getXPToNextLevel(xp, level) {
   const nextLevelXP = XP_PER_LEVEL[level] || XP_PER_LEVEL[XP_PER_LEVEL.length - 1];
   return Math.max(0, nextLevelXP - xp);
+}
+
+export function getDailyHistory(history, days = 7) {
+  const result = [];
+  const now = new Date();
+  
+  for (let i = days - 1; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+    
+    const entry = (history || []).find(h => h.date === dateStr);
+    result.push({
+      date: dateStr,
+      xp: entry?.xp || 0,
+      dayName: date.toLocaleDateString('en-US', { weekday: 'short' })
+    });
+  }
+  
+  return result;
+}
+
+export function getStreakCalendar(history, weeks = 4) {
+  const result = [];
+  const now = new Date();
+  const totalDays = weeks * 7;
+  
+  for (let i = totalDays - 1; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+    
+    const entry = (history || []).find(h => h.date === dateStr);
+    result.push({
+      date: dateStr,
+      practiced: entry && entry.xp > 0
+    });
+  }
+  
+  return result;
 }
 
 export { ACHIEVEMENTS };

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'polski-v6';
+const CACHE_NAME = 'polski-v7';
 const ASSETS = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const ASSETS = [
   './js/core/firebase.js',
   './js/core/sync.js',
   './js/core/tts.js',
+  './js/core/reminders.js',
   './js/data/lessons.js',
   './js/data/vocabulary.js',
   './js/data/sounds.js',
@@ -21,6 +22,8 @@ const ASSETS = [
   './js/views/review.js',
   './js/views/reference.js',
   './js/views/settings.js',
+  './js/views/stats.js',
+  './js/views/sounds.js',
   './js/exercises/base.js',
   './firebase-config.js',
   './manifest.json'
