@@ -83,10 +83,10 @@ export async function renderHome() {
     <div class="card" id="listening-card" style="cursor: pointer;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <div>
-          <div class="card-title">Listening Practice</div>
-          <div class="card-subtitle">Train your ear with comprehension exercises</div>
+          <div class="card-title">Practice Hub</div>
+          <div class="card-subtitle">Listening, scenarios, drills, vocab</div>
         </div>
-        <div style="font-size: 1.5rem;">🎧</div>
+        <div style="font-size: 1.5rem;">🎓</div>
       </div>
     </div>
 
@@ -152,7 +152,7 @@ export async function renderHome() {
   const listeningCard = container.querySelector('#listening-card');
   if (listeningCard) {
     listeningCard.addEventListener('click', () => {
-      router.navigate('listening', { title: 'Listening Practice' });
+      router.navigate('practice', { title: 'Practice' });
     });
   }
 

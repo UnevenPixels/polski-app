@@ -10,6 +10,9 @@ import { renderSounds } from './views/sounds.js';
 import { renderSettings } from './views/settings.js';
 import { renderStats } from './views/stats.js';
 import { renderListening } from './views/listening.js';
+import { renderScenarios } from './views/scenarios.js';
+import { renderDrills } from './views/drills.js';
+import { renderPractice } from './views/practice.js';
 import { initTTS, isMuted, toggleMute } from './core/tts.js';
 import { initReminders } from './core/reminders.js';
 
@@ -28,6 +31,9 @@ async function init() {
   router.register('settings', renderSettings);
   router.register('stats', renderStats);
   router.register('listening', renderListening);
+  router.register('scenarios', renderScenarios);
+  router.register('drills', renderDrills);
+  router.register('practice', renderPractice);
 
   setupNavigation();
   setupBackButton();
@@ -47,6 +53,7 @@ function setupNavigation() {
         home: 'Polski',
         lessons: 'Lessons',
         review: 'Review',
+        practice: 'Practice',
         reference: 'Reference',
         settings: 'Settings'
       };

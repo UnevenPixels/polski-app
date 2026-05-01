@@ -57,8 +57,13 @@ class Router {
   }
 
   updateNav(path) {
-    const mainViews = ['home', 'lessons', 'review', 'reference'];
-    const navPath = mainViews.includes(path) ? path : null;
+    const mainViews = ['home', 'lessons', 'review', 'practice', 'reference', 'settings'];
+    let navPath = mainViews.includes(path) ? path : null;
+    
+    // Treat practice sub-views as practice
+    if (['listening', 'scenarios', 'drills'].includes(path)) {
+      navPath = 'practice';
+    }
 
     document.querySelectorAll('.nav-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.view === navPath);

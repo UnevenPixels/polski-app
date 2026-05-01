@@ -1,4 +1,4 @@
-const CACHE_NAME = 'polski-v9';
+const CACHE_NAME = 'polski-v10';
 const ASSETS = [
   './',
   './index.html',
@@ -17,6 +17,9 @@ const ASSETS = [
   './js/data/sounds.js',
   './js/data/grammar.js',
   './js/data/listening.js',
+  './js/data/scenarios.js',
+  './js/data/drills.js',
+  './js/data/frequency-vocab.js',
   './js/views/home.js',
   './js/views/lessons.js',
   './js/views/lesson.js',
@@ -26,6 +29,9 @@ const ASSETS = [
   './js/views/stats.js',
   './js/views/sounds.js',
   './js/views/listening.js',
+  './js/views/scenarios.js',
+  './js/views/drills.js',
+  './js/views/practice.js',
   './js/exercises/base.js',
   './firebase-config.js',
   './manifest.json'
