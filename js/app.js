@@ -9,6 +9,7 @@ import { renderReference } from './views/reference.js';
 import { renderSounds } from './views/sounds.js';
 import { renderSettings } from './views/settings.js';
 import { renderStats } from './views/stats.js';
+import { renderListening } from './views/listening.js';
 import { initTTS, isMuted, toggleMute } from './core/tts.js';
 import { initReminders } from './core/reminders.js';
 
@@ -26,6 +27,7 @@ async function init() {
   router.register('sounds', renderSounds);
   router.register('settings', renderSettings);
   router.register('stats', renderStats);
+  router.register('listening', renderListening);
 
   setupNavigation();
   setupBackButton();

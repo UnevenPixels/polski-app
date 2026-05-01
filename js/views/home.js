@@ -80,6 +80,16 @@ export async function renderHome() {
       </div>
     </div>
 
+    <div class="card" id="listening-card" style="cursor: pointer;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div class="card-title">Listening Practice</div>
+          <div class="card-subtitle">Train your ear with comprehension exercises</div>
+        </div>
+        <div style="font-size: 1.5rem;">🎧</div>
+      </div>
+    </div>
+
     <h3 style="margin: 24px 0 12px; color: var(--text-secondary); font-size: 0.875rem; text-transform: uppercase;">Quick Stats</h3>
     <div class="card">
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -136,6 +146,13 @@ export async function renderHome() {
   if (soundsCard) {
     soundsCard.addEventListener('click', () => {
       router.navigate('sounds', { title: 'Polish Sounds' });
+    });
+  }
+
+  const listeningCard = container.querySelector('#listening-card');
+  if (listeningCard) {
+    listeningCard.addEventListener('click', () => {
+      router.navigate('listening', { title: 'Listening Practice' });
     });
   }
 
