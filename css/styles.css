@@ -82,6 +82,16 @@ body {
   color: var(--accent);
 }
 
+#sync-status {
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  min-width: 24px;
+  justify-content: center;
+}
+
 .icon-btn {
   width: 40px;
   height: 40px;

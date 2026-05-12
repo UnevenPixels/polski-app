@@ -1,4 +1,5 @@
 import { isSyncEnabled, saveToCloud, saveVocabularyToCloud } from './firebase.js';
+import { enqueue } from './sync-queue.js';
 
 const DB_NAME = 'polski-db';
 const DB_VERSION = 1;
@@ -75,18 +76,31 @@ export async function set(storeName, value) {
 }
 
 // Debounced cloud sync to avoid too many writes
+// Uses persistent queue so writes survive offline / app close
 function schedulCloudSync(storeName, value) {
   if (syncTimeout) clearTimeout(syncTimeout);
   
   syncTimeout = setTimeout(async () => {
     try {
       if (storeName === STORES.progress) {
-        await saveToCloud(value);
+        // Enqueue progress save (coalesced - only latest survives)
+        await enqueue({
+          type: 'progress',
+          coalesceKey: 'progress',
+          payload: value
+        });
+      } else if (storeName === STORES.vocabulary) {
+        // Vocabulary updates are per-word; coalesce by word
+        await enqueue({
+          type: 'vocabulary',
+          coalesceKey: `vocab-${value.word}`,
+          payload: [value]
+        });
       }
     } catch (error) {
-      console.warn('Background sync failed:', error);
+      console.warn('Failed to enqueue sync:', error);
     }
-  }, 2000); // Wait 2 seconds before syncing
+  }, 2000); // Wait 2 seconds before queueing
 }
 
 export async function getAll(storeName) {

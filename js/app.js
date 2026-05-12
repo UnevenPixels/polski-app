@@ -15,11 +15,13 @@ import { renderDrills } from './views/drills.js';
 import { renderPractice } from './views/practice.js';
 import { initTTS, isMuted, toggleMute } from './core/tts.js';
 import { initReminders } from './core/reminders.js';
+import { initSyncQueue, onQueueChange, getQueueSize } from './core/sync-queue.js';
 
 async function init() {
   await initDB();
   initTTS();
   initReminders();
+  initSyncQueue();
 
   router.register('home', renderHome);
   router.register('lessons', renderLessons);
@@ -38,11 +40,47 @@ async function init() {
   setupNavigation();
   setupBackButton();
   setupMuteButton();
+  setupSyncIndicator();
 
   await updateHeaderStats();
   await router.navigate('home');
 
   registerServiceWorker();
+}
+
+function setupSyncIndicator() {
+  const indicator = document.getElementById('sync-status');
+  if (!indicator) return;
+  
+  const update = ({ size, isDraining, online }) => {
+    if (!online) {
+      indicator.classList.remove('hidden');
+      indicator.textContent = '☁️⚡';
+      indicator.title = 'Offline — changes saved locally';
+      indicator.style.color = 'var(--warning)';
+    } else if (size > 0 || isDraining) {
+      indicator.classList.remove('hidden');
+      indicator.textContent = isDraining ? '↻' : `↑${size}`;
+      indicator.title = isDraining ? 'Syncing...' : `${size} changes pending`;
+      indicator.style.color = 'var(--text-secondary)';
+    } else {
+      indicator.classList.add('hidden');
+    }
+  };
+  
+  onQueueChange(update);
+  
+  // Initial state
+  getQueueSize().then(size => {
+    update({ size, isDraining: false, online: navigator.onLine });
+  });
+  
+  window.addEventListener('online', () => {
+    getQueueSize().then(size => update({ size, isDraining: false, online: true }));
+  });
+  window.addEventListener('offline', () => {
+    update({ size: 0, isDraining: false, online: false });
+  });
 }
 
 function setupNavigation() {
@@ -106,11 +144,43 @@ export function showToast(message, type = 'info') {
 }
 
 function registerServiceWorker() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('SW registered'))
-      .catch(err => console.log('SW registration failed:', err));
-  }
+  if (!('serviceWorker' in navigator)) return;
+  
+  navigator.serviceWorker.register('./sw.js')
+    .then(reg => {
+      console.log('SW registered');
+      
+      // Check for updates periodically (when app is foregrounded)
+      setInterval(() => reg.update().catch(() => {}), 60 * 60 * 1000); // hourly
+      
+      // Check on visibility change (mobile resume)
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          reg.update().catch(() => {});
+        }
+      });
+      
+      // Listen for new SW
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        if (!newWorker) return;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            // New version available - activate immediately
+            newWorker.postMessage({ type: 'skip-waiting' });
+          }
+        });
+      });
+    })
+    .catch(err => console.log('SW registration failed:', err));
+  
+  // Reload once when the new SW takes over
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+  });
 }
 
 document.addEventListener('DOMContentLoaded', init);

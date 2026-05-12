@@ -27,6 +27,11 @@ let syncEnabled = false;
 async function loadFirebaseSDK() {
   if (window.firebase) return;
   
+  // Don't even try if offline - we'd just hang
+  if (!navigator.onLine) {
+    throw new Error('Offline - cannot load Firebase SDK');
+  }
+  
   const scripts = [
     'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
     'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
@@ -38,7 +43,10 @@ async function loadFirebaseSDK() {
       const script = document.createElement('script');
       script.src = src;
       script.onload = resolve;
-      script.onerror = reject;
+      script.onerror = () => reject(new Error(`Failed to load ${src}`));
+      // Add 10s timeout to avoid hanging forever
+      const timeout = setTimeout(() => reject(new Error(`Timeout loading ${src}`)), 10000);
+      script.onload = () => { clearTimeout(timeout); resolve(); };
       document.head.appendChild(script);
     });
   }
@@ -49,7 +57,7 @@ export async function initFirebase() {
   if (app) return { app, db, auth };
   
   // Check if config is set
-  if (FIREBASE_CONFIG.apiKey === "YOUR_API_KEY") {
+  if (!FIREBASE_CONFIG || FIREBASE_CONFIG.apiKey === "YOUR_API_KEY") {
     console.log('Firebase not configured. Running in offline mode.');
     return null;
   }
@@ -74,6 +82,8 @@ export async function initFirebase() {
       if (user) {
         syncEnabled = true;
         console.log('Signed in as:', user.email || user.uid);
+        // Trigger queue drain when auth becomes available
+        import('./sync-queue.js').then(({ drainQueue }) => drainQueue()).catch(() => {});
       } else {
         syncEnabled = false;
       }
@@ -81,7 +91,7 @@ export async function initFirebase() {
     
     return { app, db, auth };
   } catch (error) {
-    console.error('Firebase init error:', error);
+    console.warn('Firebase init failed (this is OK if offline):', error.message);
     return null;
   }
 }
