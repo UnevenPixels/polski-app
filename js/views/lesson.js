@@ -1,5 +1,6 @@
 import { router } from '../router.js';
 import { lessons } from '../data/lessons.js';
+import { lessonExtras } from '../data/lesson-extras.js';
 import { addXP, updateStreak, updateLessonProgress, unlockAchievement, incrementStats } from '../core/progress.js';
 import { set, STORES } from '../core/storage.js';
 import { createVocabularyCard } from '../core/srs.js';
@@ -23,6 +24,23 @@ export async function renderLesson(params) {
   currentExerciseIndex = 0;
   correctCount = 0;
   exercises = generateExercises(subLesson, lessonId, subLessonId);
+
+  // Inject PDF-derived extras (memorize phrases and notes) right after the dialogue
+  const extras = lessonExtras?.[lessonId]?.[subLessonId];
+  if (extras) {
+    const inserts = [];
+    if (Array.isArray(extras.memorize) && extras.memorize.length) {
+      inserts.push({ type: 'memorize-list', data: extras.memorize });
+    }
+    if (Array.isArray(extras.notes) && extras.notes.length) {
+      inserts.push({ type: 'notes-list', data: extras.notes });
+    }
+    if (inserts.length) {
+      // Insert after the dialogue card (index 0) if present, otherwise at the start
+      const insertAt = exercises[0]?.type === 'dialogue' ? 1 : 0;
+      exercises.splice(insertAt, 0, ...inserts);
+    }
+  }
   
   // Only count graded exercises (not dialogue or vocab-intro)
   const gradedTypes = ['translate-to-english', 'translate-to-polish', 'type-polish', 'fill-blank', 'gender-match'];
@@ -166,12 +184,79 @@ async function renderCurrentExercise(container, lessonId, subLessonId) {
     case 'gender-match':
       renderGenderMatch(contentEl, exercise, container, lessonId, subLessonId);
       break;
+    case 'memorize-list':
+      renderMemorizeList(contentEl, exercise.data, container, lessonId, subLessonId);
+      break;
+    case 'notes-list':
+      renderNotesList(contentEl, exercise.data, container, lessonId, subLessonId);
+      break;
     case 'complete':
       renderComplete(contentEl, exercise.data, container, lessonId, subLessonId);
       break;
     default:
       renderMultipleChoice(contentEl, exercise, container, lessonId, subLessonId);
   }
+}
+
+function renderMemorizeList(contentEl, items, container, lessonId, subLessonId) {
+  let html = `
+    <div class="exercise-prompt">Do zapamiętania <span style="color: var(--text-secondary); font-weight: 400;">(for memorization)</span></div>
+    <div class="card" style="margin-bottom: 16px;">
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+  `;
+  items.forEach(phrase => {
+    const escaped = phrase.replace(/"/g, '&quot;');
+    html += `
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border);">
+        <span style="font-weight: 500;">${phrase}</span>
+        <button class="speak-btn" data-text="${escaped}" title="Listen">🔊</button>
+      </div>
+    `;
+  });
+  html += `
+      </div>
+    </div>
+    <div class="exercise-actions">
+      <button class="btn btn-full btn-lg" id="continue-btn">Continue</button>
+    </div>
+  `;
+  contentEl.innerHTML = html;
+
+  contentEl.querySelectorAll('.speak-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      speak(btn.dataset.text);
+    });
+  });
+  contentEl.querySelector('#continue-btn').addEventListener('click', () => {
+    currentExerciseIndex++;
+    renderCurrentExercise(container, lessonId, subLessonId);
+  });
+}
+
+function renderNotesList(contentEl, items, container, lessonId, subLessonId) {
+  let html = `
+    <div class="exercise-prompt">Uwagi <span style="color: var(--text-secondary); font-weight: 400;">(notes)</span></div>
+    <div class="card" style="margin-bottom: 16px;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+  `;
+  items.forEach(note => {
+    html += `
+      <div style="padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 0.95rem; line-height: 1.45;">${note}</div>
+    `;
+  });
+  html += `
+      </div>
+    </div>
+    <div class="exercise-actions">
+      <button class="btn btn-full btn-lg" id="continue-btn">Continue</button>
+    </div>
+  `;
+  contentEl.innerHTML = html;
+  contentEl.querySelector('#continue-btn').addEventListener('click', () => {
+    currentExerciseIndex++;
+    renderCurrentExercise(container, lessonId, subLessonId);
+  });
 }
 
 function renderDialogue(contentEl, dialogue, container, lessonId, subLessonId) {
