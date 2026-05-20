@@ -188,7 +188,8 @@ function renderGrammarTab(contentEl, query) {
           ${grammar.months.map(m => `<tr><td>${m.polish}</td><td>${m.english}</td></tr>`).join('')}
         </table>
       `
-    }
+    },
+    ...buildExpandedGrammarSections()
   ];
 
   const filtered = query 
@@ -311,6 +312,191 @@ function renderCasesTab(contentEl, query) {
   });
 
   contentEl.innerHTML = html || '<div class="empty-state"><div class="empty-title">No results found</div></div>';
+}
+
+function kvTable(obj) {
+  return `<table class="grammar-table">${Object.entries(obj).map(
+    ([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`
+  ).join('')}</table>`;
+}
+
+function buildExpandedGrammarSections() {
+  const sections = [];
+
+  if (grammar.pastTense) {
+    const pt = grammar.pastTense;
+    let content = `<p>${pt.description}</p>`;
+    content += `<div style="margin-top: 12px;"><strong>Singular endings:</strong></div>${kvTable(pt.endings.singular)}`;
+    content += `<div style="margin-top: 12px;"><strong>Plural endings:</strong></div>${kvTable(pt.endings.plural)}`;
+    Object.entries(pt.examples).forEach(([verb, data]) => {
+      content += `<div style="margin-top: 12px;"><strong>${verb}</strong> — ${data.meaning}</div>${kvTable(data.forms)}`;
+    });
+    sections.push({ title: 'Past Tense', content });
+  }
+
+  if (grammar.futureTense) {
+    const ft = grammar.futureTense;
+    let content = `<p>${ft.description}</p>`;
+    content += `<div style="margin-top: 12px;"><strong>Auxiliary 'być':</strong></div>${kvTable(ft.auxiliary)}`;
+    Object.entries(ft.examples).forEach(([label, data]) => {
+      content += `<div style="margin-top: 12px;"><strong>${label}</strong> — ${data.verb}</div>${kvTable(data.forms)}`;
+    });
+    sections.push({ title: 'Future Tense', content });
+  }
+
+  if (grammar.imperative) {
+    const im = grammar.imperative;
+    let content = `<p>${im.description}</p>`;
+    content += `<ul style="padding-left: 20px;">${im.rules.map(r => `<li style="margin-bottom: 4px;">${r}</li>`).join('')}</ul>`;
+    content += `<table class="grammar-table" style="margin-top: 12px;">${im.examples.map(
+      e => `<tr><td>${e.verb}</td><td>${e.imperative}</td></tr>`
+    ).join('')}</table>`;
+    sections.push({ title: 'Imperative Mood', content });
+  }
+
+  if (grammar.conditional) {
+    const c = grammar.conditional;
+    let content = `<p>${c.description}</p><p style="color: var(--text-secondary);">${c.formation}</p>`;
+    content += `<div style="margin-top: 12px;"><strong>Singular particles:</strong></div>${kvTable(c.particle.singular)}`;
+    content += `<div style="margin-top: 12px;"><strong>Plural particles:</strong></div>${kvTable(c.particle.plural)}`;
+    content += `<table class="grammar-table" style="margin-top: 12px;">${c.examples.map(
+      e => `<tr><td>${e.polish}</td><td>${e.english}</td></tr>`
+    ).join('')}</table>`;
+    sections.push({ title: 'Conditional Mood', content });
+  }
+
+  if (grammar.verbsOfMotion) {
+    const vm = grammar.verbsOfMotion;
+    let content = `<p>${vm.description}</p>`;
+    content += `<table class="grammar-table" style="margin-top: 12px;"><tr><th>Meaning</th><th>Determinate</th><th>Indeterminate</th></tr>${
+      vm.pairs.map(p => `<tr><td>${p.meaning}</td><td>${p.determinate}</td><td>${p.indeterminate}</td></tr>`).join('')
+    }</table>`;
+    content += `<div style="margin-top: 12px;"><strong>Usage:</strong></div>`;
+    content += `<table class="grammar-table">${vm.usage.map(u => `<tr><td>${u.polish}</td><td>${u.english}</td></tr>`).join('')}</table>`;
+    content += `<div style="margin-top: 12px;"><strong>Prefixed forms:</strong></div>`;
+    content += `<table class="grammar-table"><tr><th>Prefix</th><th>Meaning</th><th>Examples</th></tr>${
+      vm.prefixed.map(p => `<tr><td>${p.prefix}</td><td>${p.meaning}</td><td>${p.examples}</td></tr>`).join('')
+    }</table>`;
+    sections.push({ title: 'Verbs of Motion', content });
+  }
+
+  if (grammar.aspect) {
+    const a = grammar.aspect;
+    let content = `<p>${a.description}</p>`;
+    content += `<ul style="padding-left: 20px;">${a.rules.map(r => `<li style="margin-bottom: 4px;">${r}</li>`).join('')}</ul>`;
+    content += `<div style="margin-top: 12px;"><strong>Common aspect pairs:</strong></div>`;
+    content += `<table class="grammar-table"><tr><th>Imperfective</th><th>Perfective</th><th>Meaning</th></tr>${
+      a.commonPairs.map(p => `<tr><td>${p.imperfective}</td><td>${p.perfective}</td><td>${p.meaning}</td></tr>`).join('')
+    }</table>`;
+    sections.push({ title: 'Verbal Aspect', content });
+  }
+
+  if (grammar.reflexive) {
+    const r = grammar.reflexive;
+    let content = `<p>${r.description}</p>`;
+    r.uses.forEach(u => {
+      content += `<div style="margin-top: 12px;"><strong>${u.type}</strong> — ${u.desc}</div>`;
+      content += `<ul style="padding-left: 20px;">${u.examples.map(e => `<li>${e}</li>`).join('')}</ul>`;
+    });
+    content += `<div style="margin-top: 12px;"><strong>Common reflexive verbs:</strong></div>`;
+    content += `<table class="grammar-table">${r.commonReflexives.map(v => `<tr><td>${v.verb}</td><td>${v.meaning}</td></tr>`).join('')}</table>`;
+    sections.push({ title: 'Reflexive Verbs (się)', content });
+  }
+
+  if (grammar.comparison) {
+    const c = grammar.comparison;
+    let content = `<p>${c.description}</p>`;
+    content += `<ul style="padding-left: 20px;">${c.rules.map(r => `<li style="margin-bottom: 4px;">${r}</li>`).join('')}</ul>`;
+    content += `<div style="margin-top: 12px;"><strong>Irregular comparatives:</strong></div>`;
+    content += `<table class="grammar-table"><tr><th>Positive</th><th>Comparative</th><th>Superlative</th><th>Adverb</th></tr>${
+      c.irregular.map(i => `<tr><td>${i.positive}</td><td>${i.comparative}</td><td>${i.superlative}</td><td>${i.adv}</td></tr>`).join('')
+    }</table>`;
+    content += `<table class="grammar-table" style="margin-top: 12px;">${c.examples.map(e => `<tr><td>${e.polish}</td><td>${e.english}</td></tr>`).join('')}</table>`;
+    sections.push({ title: 'Comparison of Adjectives & Adverbs', content });
+  }
+
+  if (grammar.prepositions) {
+    const p = grammar.prepositions;
+    let content = `<p>${p.description}</p>`;
+    Object.entries(p.byCase).forEach(([caseName, preps]) => {
+      content += `<div style="margin-top: 12px;"><strong>${caseName.charAt(0).toUpperCase() + caseName.slice(1)}:</strong></div>`;
+      content += `<table class="grammar-table">${preps.map(pr => `<tr><td>${pr.prep}</td><td>${pr.meaning}</td></tr>`).join('')}</table>`;
+    });
+    sections.push({ title: 'Prepositions by Case', content });
+  }
+
+  if (grammar.sentenceConstructions) {
+    const sc = grammar.sentenceConstructions;
+    let content = `<p>${sc.description}</p>`;
+    sc.patterns.forEach(pat => {
+      content += `<div style="margin-top: 12px;"><strong>${pat.name}</strong></div>`;
+      content += `<div style="color: var(--text-secondary);">${pat.polish} — ${pat.english}</div>`;
+      content += `<ul style="padding-left: 20px;">${pat.examples.map(e => `<li>${e}</li>`).join('')}</ul>`;
+    });
+    sections.push({ title: 'Common Sentence Constructions', content });
+  }
+
+  if (grammar.negation) {
+    const n = grammar.negation;
+    let content = `<p>${n.description}</p>`;
+    content += `<ul style="padding-left: 20px;">${n.rules.map(r => `<li style="margin-bottom: 4px;">${r}</li>`).join('')}</ul>`;
+    content += `<table class="grammar-table" style="margin-top: 12px;">${n.examples.map(e => `<tr><td>${e.polish}</td><td>${e.english}</td></tr>`).join('')}</table>`;
+    sections.push({ title: 'Negation', content });
+  }
+
+  if (grammar.modalWords) {
+    const m = grammar.modalWords;
+    let content = `<p>${m.description}</p>`;
+    content += `<table class="grammar-table"><tr><th>Word</th><th>Meaning</th><th>Use</th></tr>${
+      m.items.map(i => `<tr><td>${i.word}</td><td>${i.meaning}</td><td>${i.construction}</td></tr>`).join('')
+    }</table>`;
+    sections.push({ title: 'Modal Verbs & Expressions', content });
+  }
+
+  if (grammar.particlesAndFillers) {
+    const p = grammar.particlesAndFillers;
+    let content = `<p>${p.description}</p>`;
+    content += `<table class="grammar-table">${p.items.map(i => `<tr><td>${i.word}</td><td>${i.meaning}</td></tr>`).join('')}</table>`;
+    sections.push({ title: 'Particles & Fillers', content });
+  }
+
+  if (grammar.soundChanges) {
+    const s = grammar.soundChanges;
+    let content = `<p>${s.description}</p>`;
+    content += `<table class="grammar-table"><tr><th>Alternation</th><th>Example</th></tr>${
+      s.patterns.map(p => `<tr><td>${p.from}</td><td>${p.example}</td></tr>`).join('')
+    }</table>`;
+    sections.push({ title: 'Sound Changes (Alternations)', content });
+  }
+
+  if (grammar.collectiveNumerals) {
+    const cn = grammar.collectiveNumerals;
+    let content = `<p>${cn.description}</p>`;
+    content += `<table class="grammar-table">${cn.items.map(i => `<tr><td>${i.num}</td><td>${i.form}</td></tr>`).join('')}</table>`;
+    content += `<table class="grammar-table" style="margin-top: 12px;">${cn.examples.map(e => `<tr><td>${e.polish}</td><td>${e.english}</td></tr>`).join('')}</table>`;
+    sections.push({ title: 'Collective Numerals', content });
+  }
+
+  if (grammar.timeExpressions) {
+    const t = grammar.timeExpressions;
+    let content = `<p>${t.description}</p>`;
+    content += `<div style="margin-top: 12px;"><strong>Time of day:</strong></div>`;
+    content += `<table class="grammar-table">${t.timeOfDay.map(i => `<tr><td>${i.polish}</td><td>${i.english}</td></tr>`).join('')}</table>`;
+    content += `<div style="margin-top: 12px;"><strong>Telling time:</strong></div>`;
+    content += `<table class="grammar-table">${t.clock.map(i => `<tr><td>${i.polish}</td><td>${i.english}</td></tr>`).join('')}</table>`;
+    content += `<div style="margin-top: 12px;"><strong>Duration prepositions:</strong></div>`;
+    content += `<table class="grammar-table">${t.duration.map(i => `<tr><td>${i.polish}</td><td>${i.english}</td></tr>`).join('')}</table>`;
+    sections.push({ title: 'Time Expressions', content });
+  }
+
+  if (grammar.classroomExpressions) {
+    const content = `<table class="grammar-table">${
+      grammar.classroomExpressions.map(e => `<tr><td>${e.polish}</td><td>${e.english}</td></tr>`).join('')
+    }</table>`;
+    sections.push({ title: 'Classroom Expressions', content });
+  }
+
+  return sections;
 }
 
 function renderVerbsTab(contentEl, query) {
