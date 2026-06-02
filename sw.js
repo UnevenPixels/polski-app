@@ -5,7 +5,7 @@
 // - External CDN (Firebase): network-first with cache fallback (works offline after first load)
 // - Everything else: stale-while-revalidate
 
-const CACHE_VERSION = 'v14';
+const CACHE_VERSION = 'v15';
 const STATIC_CACHE = `polski-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `polski-runtime-${CACHE_VERSION}`;
 const CDN_CACHE = `polski-cdn-${CACHE_VERSION}`;
@@ -33,6 +33,7 @@ const STATIC_ASSETS = [
   './js/data/drills.js',
   './js/data/frequency-vocab.js',
   './js/data/lesson-extras.js',
+  './js/data/verbs.js',
   './js/views/home.js',
   './js/views/lessons.js',
   './js/views/lesson.js',
@@ -45,6 +46,7 @@ const STATIC_ASSETS = [
   './js/views/scenarios.js',
   './js/views/drills.js',
   './js/views/practice.js',
+  './js/views/verbs.js',
   './js/exercises/base.js',
   './firebase-config.js',
   './manifest.json',

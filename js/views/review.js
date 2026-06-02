@@ -4,6 +4,11 @@ import { addXP, updateStreak, incrementStats } from '../core/progress.js';
 import { router } from '../router.js';
 import { updateHeaderStats } from '../app.js';
 
+function tenseLabel(tense) {
+  if (!tense) return '';
+  return tense.charAt(0).toUpperCase() + tense.slice(1);
+}
+
 let cards = [];
 let currentIndex = 0;
 let reviewedCount = 0;
@@ -45,6 +50,31 @@ function renderCard(container) {
 
   const card = cards[currentIndex];
   const remaining = cards.length - currentIndex;
+  const isConjugation = card.type === 'conjugation';
+
+  const frontHtml = isConjugation
+    ? `
+        <div class="flashcard-word">${card.infinitive}</div>
+        <div class="flashcard-info">${card.person} · ${tenseLabel(card.tense)}</div>
+        <div style="margin-top: 24px; font-size: 0.875rem; color: var(--text-muted);">Tap to reveal</div>
+      `
+    : `
+        <div class="flashcard-word">${card.word}</div>
+        ${card.gender ? `<div class="flashcard-info">${card.gender}</div>` : ''}
+        <div style="margin-top: 24px; font-size: 0.875rem; color: var(--text-muted);">Tap to reveal</div>
+      `;
+
+  const backHtml = isConjugation
+    ? `
+        <div class="flashcard-word">${card.form}</div>
+        <div class="flashcard-meaning" style="margin-top: 12px;">${card.infinitive} — ${card.person}, ${tenseLabel(card.tense)}</div>
+        ${card.verbMeaning ? `<div style="margin-top: 8px; font-size: 0.875rem; color: var(--text-secondary);">${card.verbMeaning}</div>` : ''}
+      `
+    : `
+        <div class="flashcard-word">${card.word}</div>
+        <div class="flashcard-meaning" style="margin-top: 12px;">${card.meaning}</div>
+        ${card.example ? `<div style="margin-top: 16px; font-size: 0.875rem; color: var(--text-secondary); font-style: italic;">"${card.example}"</div>` : ''}
+      `;
 
   container.innerHTML = `
     <div class="exercise-progress">
@@ -58,16 +88,8 @@ function renderCard(container) {
     </div>
 
     <div class="flashcard" id="flashcard">
-      <div id="card-front">
-        <div class="flashcard-word">${card.word}</div>
-        ${card.gender ? `<div class="flashcard-info">${card.gender}</div>` : ''}
-        <div style="margin-top: 24px; font-size: 0.875rem; color: var(--text-muted);">Tap to reveal</div>
-      </div>
-      <div id="card-back" class="hidden">
-        <div class="flashcard-word">${card.word}</div>
-        <div class="flashcard-meaning" style="margin-top: 12px;">${card.meaning}</div>
-        ${card.example ? `<div style="margin-top: 16px; font-size: 0.875rem; color: var(--text-secondary); font-style: italic;">"${card.example}"</div>` : ''}
-      </div>
+      <div id="card-front">${frontHtml}</div>
+      <div id="card-back" class="hidden">${backHtml}</div>
     </div>
 
     <div id="rating-area" class="hidden">

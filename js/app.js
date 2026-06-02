@@ -13,6 +13,7 @@ import { renderListening } from './views/listening.js';
 import { renderScenarios } from './views/scenarios.js';
 import { renderDrills } from './views/drills.js';
 import { renderPractice } from './views/practice.js';
+import { renderVerbs } from './views/verbs.js';
 import { initTTS, isMuted, toggleMute } from './core/tts.js';
 import { initReminders } from './core/reminders.js';
 import { initSyncQueue, onQueueChange, getQueueSize } from './core/sync-queue.js';
@@ -36,6 +37,7 @@ async function init() {
   router.register('scenarios', renderScenarios);
   router.register('drills', renderDrills);
   router.register('practice', renderPractice);
+  router.register('verbs', renderVerbs);
 
   setupNavigation();
   setupBackButton();

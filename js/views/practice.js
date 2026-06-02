@@ -60,6 +60,17 @@ function renderPracticeHub() {
       </div>
     </div>
 
+    <div class="card practice-card" data-target="verbs" style="cursor: pointer;">
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <div style="font-size: 2rem;">🔤</div>
+        <div style="flex: 1;">
+          <div style="font-weight: 600;">Verbs & Conjugation</div>
+          <div class="card-subtitle">Study verb tenses, then quiz yourself</div>
+        </div>
+        <div style="color: var(--text-muted);">→</div>
+      </div>
+    </div>
+
     <div class="card practice-card" data-target="vocab" style="cursor: pointer;">
       <div style="display: flex; gap: 12px; align-items: center;">
         <div style="font-size: 2rem;">📚</div>
@@ -81,7 +92,8 @@ function renderPracticeHub() {
         const titles = {
           listening: 'Listening Practice',
           scenarios: 'Scenarios',
-          drills: 'Drills'
+          drills: 'Drills',
+          verbs: 'Verbs'
         };
         router.navigate(target, { title: titles[target] });
       }

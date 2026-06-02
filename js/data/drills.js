@@ -1,6 +1,8 @@
 // Polish grammar drills - rapid-fire mechanical practice
 // Categories: cases (the most needed), aspect pairs, conjugation
 
+import { getConjugationDrills } from './verbs.js';
+
 export const drillCategories = {
   genitive: {
     title: "Genitive Case",
@@ -167,6 +169,30 @@ export const drillCategories = {
       { prompt: "21 ___ (lat / rok)", answer: "lat", hint: "21 years (years use 'lat')", explanation: "Use 'lat' for 5+ and 11-19" },
       { prompt: "3 ___ (rok)", answer: "lata", hint: "3 years", explanation: "2-4 use 'lata'" }
     ]
+  },
+
+  conjugation_present: {
+    title: "Conjugation: Present",
+    titlePl: "Czas teraźniejszy",
+    description: "Conjugate common verbs in the present tense",
+    icon: "🗣️",
+    drills: getConjugationDrills('present')
+  },
+
+  conjugation_past: {
+    title: "Conjugation: Past",
+    titlePl: "Czas przeszły",
+    description: "Gendered past-tense forms of common verbs",
+    icon: "⏪",
+    drills: getConjugationDrills('past')
+  },
+
+  conjugation_future: {
+    title: "Conjugation: Future",
+    titlePl: "Czas przyszły",
+    description: "Future forms (będę + infinitive) of common verbs",
+    icon: "⏩",
+    drills: getConjugationDrills('future')
   }
 };
 

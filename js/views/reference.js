@@ -1,5 +1,6 @@
 import { grammar } from '../data/grammar.js';
 import { vocabulary } from '../data/vocabulary.js';
+import { getVerbs, TENSES } from '../data/verbs.js';
 
 let currentTab = 'grammar';
 let vocabDisplayCount = 50;
@@ -500,7 +501,7 @@ function buildExpandedGrammarSections() {
 }
 
 function renderVerbsTab(contentEl, query) {
-  const verbs = Object.values(grammar.verbConjugations);
+  const verbs = getVerbs();
   
   const verbGroups = [
     {
@@ -530,36 +531,40 @@ function renderVerbsTab(contentEl, query) {
   verbs.forEach(verb => {
     const matchesQuery = !query || 
       verb.infinitive.toLowerCase().includes(query) ||
-      verb.meaning.toLowerCase().includes(query);
+      verb.meaning.toLowerCase().includes(query) ||
+      (verb.aspectPartner && verb.aspectPartner.toLowerCase().includes(query));
     
     if (!matchesQuery) return;
+
+    const groupText = verb.irregular || verb.group === 'irregular'
+      ? 'irregular'
+      : `group ${verb.group}`;
+    const badges = [
+      `<span style="color: var(--accent); font-size: 0.75rem;">${verb.aspect}</span>`,
+      `<span style="color: var(--text-muted); font-size: 0.75rem;">${groupText}</span>`,
+      verb.aspectPartner ? `<span style="color: var(--text-muted); font-size: 0.75rem;">pf. ${verb.aspectPartner}</span>` : ''
+    ].filter(Boolean).join(' &middot; ');
+
+    const tenseTables = TENSES.map(t => {
+      const forms = verb[t.id];
+      if (!forms) return '';
+      return `
+        <div style="margin: 16px 0 12px;"><strong>${t.label}</strong> <span style="color: var(--text-muted); font-weight: 400;">(${t.polish})</span></div>
+        <table class="grammar-table">
+          ${t.persons.map(person => forms[person]
+            ? `<tr><td>${person}</td><td>${forms[person]}</td></tr>`
+            : '').join('')}
+        </table>
+      `;
+    }).join('');
 
     html += `
       <div class="grammar-section">
         <div class="grammar-title">${verb.infinitive} - ${verb.meaning}</div>
         <div class="card">
-          <div style="margin-bottom: 12px;"><strong>Present tense:</strong></div>
-          <table class="grammar-table">
-            ${Object.entries(verb.present).map(([person, form]) => 
-              `<tr><td>${person}</td><td>${form}</td></tr>`
-            ).join('')}
-          </table>
-          ${verb.past ? `
-            <div style="margin: 16px 0 12px;"><strong>Past tense:</strong></div>
-            <table class="grammar-table">
-              ${Object.entries(verb.past).map(([person, form]) => 
-                `<tr><td>${person}</td><td>${form}</td></tr>`
-              ).join('')}
-            </table>
-          ` : ''}
-          ${verb.future ? `
-            <div style="margin: 16px 0 12px;"><strong>Future tense:</strong></div>
-            <table class="grammar-table">
-              ${Object.entries(verb.future).map(([person, form]) => 
-                `<tr><td>${person}</td><td>${form}</td></tr>`
-              ).join('')}
-            </table>
-          ` : ''}
+          <div style="margin-bottom: 4px;">${badges}</div>
+          ${tenseTables}
+          ${verb.example ? `<div style="margin-top: 16px; font-style: italic; color: var(--text-secondary);">"${verb.example.polish}" — ${verb.example.english}</div>` : ''}
         </div>
       </div>
     `;

@@ -61,7 +61,7 @@ class Router {
     let navPath = mainViews.includes(path) ? path : null;
     
     // Treat practice sub-views as practice
-    if (['listening', 'scenarios', 'drills'].includes(path)) {
+    if (['listening', 'scenarios', 'drills', 'verbs'].includes(path)) {
       navPath = 'practice';
     }
 
