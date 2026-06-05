@@ -1,5 +1,5 @@
 import { router } from '../router.js';
-import { getVerbs, getVerb, getConjugationCardSeeds, TENSES } from '../data/verbs.js';
+import { getVerbs, getVerb, getConjugationCardSeeds, TENSES, conjugationEnglish } from '../data/verbs.js';
 import { speak } from '../core/tts.js';
 import { addXP, incrementStats } from '../core/progress.js';
 import { showToast, updateHeaderStats } from '../app.js';
@@ -99,6 +99,7 @@ function renderVerbDetail(verbId) {
               <span style="font-weight: 500;">${form}</span>
               <button class="speak-btn" data-text="${form.replace(/"/g, '&quot;')}" title="Listen" style="margin-left: 6px;">🔊</button>
             </td>
+            <td style="color: var(--text-secondary); font-size: 0.875rem;">${conjugationEnglish(verb, t.id, person)}</td>
           </tr>
         `;
       }).join('');
@@ -232,6 +233,7 @@ function renderVerbDetail(verbId) {
         <div style="font-size: 1.25rem; font-weight: 600;">
           ${verb.infinitive} → <span style="color: var(--accent);">${q.person}</span>
         </div>
+        ${q.english ? `<div style="color: var(--text-muted); font-size: 0.875rem; margin-top: 8px;">${q.english}</div>` : ''}
       </div>
 
       <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
@@ -296,7 +298,7 @@ function buildQuiz(verb) {
     if (!forms) return;
     t.persons.forEach(person => {
       if (forms[person]) {
-        pool.push({ person, tenseLabel: t.label, form: forms[person] });
+        pool.push({ person, tenseLabel: t.label, form: forms[person], english: conjugationEnglish(verb, t.id, person) });
       }
     });
   });

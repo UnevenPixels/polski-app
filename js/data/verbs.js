@@ -558,6 +558,95 @@ export function getConjugationDrills(tense) {
   return drills;
 }
 
+// ---- English glosses for conjugated forms -------------------------------
+// Compact per-verb English: bare form (base), 3rd-person singular (third),
+// and English past (uniform across persons). The full phrase is generated
+// with the correct subject pronoun per person and tense. być is irregular
+// in English too and is handled separately.
+const VERB_EN = {
+  miec: { base: 'have', third: 'has', past: 'had' },
+  moc: { base: 'can', third: 'can', past: 'could', futureBase: 'be able to' },
+  chciec: { base: 'want', third: 'wants', past: 'wanted' },
+  musiec: { base: 'have to', third: 'has to', past: 'had to' },
+  robic: { base: 'do/make', third: 'does/makes', past: 'did/made' },
+  mowic: { base: 'speak/say', third: 'speaks/says', past: 'spoke/said' },
+  wiedziec: { base: 'know', third: 'knows', past: 'knew' },
+  znac: { base: 'know', third: 'knows', past: 'knew' },
+  myslec: { base: 'think', third: 'thinks', past: 'thought' },
+  isc: { base: 'go', third: 'goes', past: 'went' },
+  chodzic: { base: 'go/walk', third: 'goes/walks', past: 'went/walked' },
+  jechac: { base: 'go', third: 'goes', past: 'went' },
+  widziec: { base: 'see', third: 'sees', past: 'saw' },
+  dawac: { base: 'give', third: 'gives', past: 'gave' },
+  brac: { base: 'take', third: 'takes', past: 'took' },
+  jesc: { base: 'eat', third: 'eats', past: 'ate' },
+  pic: { base: 'drink', third: 'drinks', past: 'drank' },
+  czytac: { base: 'read', third: 'reads', past: 'read' },
+  pisac: { base: 'write', third: 'writes', past: 'wrote' },
+  lubic: { base: 'like', third: 'likes', past: 'liked' },
+  kochac: { base: 'love', third: 'loves', past: 'loved' },
+  pracowac: { base: 'work', third: 'works', past: 'worked' },
+  mieszkac: { base: 'live', third: 'lives', past: 'lived' },
+  czekac: { base: 'wait', third: 'waits', past: 'waited' }
+};
+
+const EN_SUBJECT_PRESENT = {
+  'ja': 'I', 'ty': 'you', 'on/ona/ono': 'he/she/it',
+  'my': 'we', 'wy': 'you (pl)', 'oni/one': 'they'
+};
+const EN_SUBJECT_PAST = {
+  'ja (m)': 'I', 'ja (f)': 'I', 'ty (m)': 'you', 'ty (f)': 'you',
+  'on': 'he', 'ona': 'she', 'ono': 'it',
+  'my (m)': 'we', 'my (f)': 'we', 'wy (m)': 'you (pl)', 'wy (f)': 'you (pl)',
+  'oni': 'they', 'one': 'they'
+};
+
+function bycEnglish(tense, person) {
+  if (tense === 'present') {
+    return {
+      'ja': 'I am', 'ty': 'you are', 'on/ona/ono': 'he/she/it is',
+      'my': 'we are', 'wy': 'you are (pl)', 'oni/one': 'they are'
+    }[person] || '';
+  }
+  if (tense === 'future') {
+    return `${EN_SUBJECT_PRESENT[person]} will be`;
+  }
+  if (tense === 'past') {
+    const byPerson = { on: 'he was', ona: 'she was', ono: 'it was' };
+    if (byPerson[person]) return byPerson[person];
+    const subj = EN_SUBJECT_PAST[person];
+    return `${subj} ${subj === 'I' ? 'was' : 'were'}`;
+  }
+  if (tense === 'imperative') {
+    return person === 'my' ? "let's be" : person === 'wy' ? 'be! (pl)' : 'be!';
+  }
+  return '';
+}
+
+// English translation of one conjugated form,
+// e.g. conjugationEnglish(robic, 'present', 'ja') -> "I do/make".
+export function conjugationEnglish(verb, tense, person) {
+  if (!verb) return '';
+  if (verb.id === 'byc') return bycEnglish(tense, person);
+  const en = VERB_EN[verb.id];
+  if (!en) return '';
+  if (tense === 'present') {
+    const v = person === 'on/ona/ono' ? en.third : en.base;
+    return `${EN_SUBJECT_PRESENT[person]} ${v}`;
+  }
+  if (tense === 'future') {
+    return `${EN_SUBJECT_PRESENT[person]} will ${en.futureBase || en.base}`;
+  }
+  if (tense === 'past') {
+    return `${EN_SUBJECT_PAST[person]} ${en.past}`;
+  }
+  if (tense === 'imperative') {
+    const b = en.imperativeBase || en.base;
+    return person === 'my' ? `let's ${b}` : person === 'wy' ? `${b}! (pl)` : `${b}!`;
+  }
+  return '';
+}
+
 // Build spaced-repetition card seeds for a verb. Each seed is a plain object
 // describing one conjugated form; the caller wraps it with SRS bookkeeping.
 // Includes present + future (all persons), core past forms, and imperative.
@@ -571,7 +660,8 @@ export function getConjugationCardSeeds(verb) {
       meaning: verb.meaning,
       tense,
       person,
-      form
+      form,
+      english: conjugationEnglish(verb, tense, person)
     });
   };
 

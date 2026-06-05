@@ -68,7 +68,8 @@ function renderCard(container) {
     ? `
         <div class="flashcard-word">${card.form}</div>
         <div class="flashcard-meaning" style="margin-top: 12px;">${card.infinitive} — ${card.person}, ${tenseLabel(card.tense)}</div>
-        ${card.verbMeaning ? `<div style="margin-top: 8px; font-size: 0.875rem; color: var(--text-secondary);">${card.verbMeaning}</div>` : ''}
+        ${card.english ? `<div style="margin-top: 8px; font-size: 1rem; color: var(--accent);">${card.english}</div>` : ''}
+        ${card.verbMeaning ? `<div style="margin-top: 4px; font-size: 0.875rem; color: var(--text-secondary);">${card.verbMeaning}</div>` : ''}
       `
     : `
         <div class="flashcard-word">${card.word}</div>

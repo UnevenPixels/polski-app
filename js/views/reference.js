@@ -1,6 +1,6 @@
 import { grammar } from '../data/grammar.js';
 import { vocabulary } from '../data/vocabulary.js';
-import { getVerbs, TENSES } from '../data/verbs.js';
+import { getVerbs, TENSES, conjugationEnglish } from '../data/verbs.js';
 
 let currentTab = 'grammar';
 let vocabDisplayCount = 50;
@@ -552,7 +552,7 @@ function renderVerbsTab(contentEl, query) {
         <div style="margin: 16px 0 12px;"><strong>${t.label}</strong> <span style="color: var(--text-muted); font-weight: 400;">(${t.polish})</span></div>
         <table class="grammar-table">
           ${t.persons.map(person => forms[person]
-            ? `<tr><td>${person}</td><td>${forms[person]}</td></tr>`
+            ? `<tr><td>${person}</td><td>${forms[person]}</td><td style="color: var(--text-secondary);">${conjugationEnglish(verb, t.id, person)}</td></tr>`
             : '').join('')}
         </table>
       `;
