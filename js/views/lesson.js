@@ -241,9 +241,20 @@ function renderNotesList(contentEl, items, container, lessonId, subLessonId) {
       <div style="display: flex; flex-direction: column; gap: 8px;">
   `;
   items.forEach(note => {
-    html += `
-      <div style="padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 0.95rem; line-height: 1.45;">${note}</div>
-    `;
+    if (note && typeof note === 'object' && note.pl) {
+      // Structured glossary entry: Polish term emphasized, English muted below.
+      html += `
+        <div style="padding: 8px 0; border-bottom: 1px solid var(--border);">
+          <div style="font-weight: 600; color: var(--accent);">${note.pl}</div>
+          ${note.en ? `<div style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.4; margin-top: 2px;">${note.en}</div>` : ''}
+        </div>
+      `;
+    } else {
+      // Legacy plain-string note (not yet cleaned up).
+      html += `
+        <div style="padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 0.95rem; line-height: 1.45;">${note}</div>
+      `;
+    }
   });
   html += `
       </div>
