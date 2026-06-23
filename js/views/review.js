@@ -89,6 +89,7 @@ function renderCard(container) {
     </div>
 
     <div class="flashcard" id="flashcard">
+      ${card.leech ? `<div style="position: absolute; top: 8px; right: 12px; font-size: 0.75rem; color: var(--text-muted);" title="You've missed this card several times — a tough one to focus on">🐞 leech</div>` : ''}
       <div id="card-front">${frontHtml}</div>
       <div id="card-back" class="hidden">${backHtml}</div>
     </div>

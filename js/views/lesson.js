@@ -2,7 +2,7 @@ import { router } from '../router.js';
 import { lessons } from '../data/lessons.js';
 import { lessonExtras } from '../data/lesson-extras.js';
 import { addXP, updateStreak, updateLessonProgress, unlockAchievement, incrementStats } from '../core/progress.js';
-import { set, STORES } from '../core/storage.js';
+import { get, set, STORES } from '../core/storage.js';
 import { createVocabularyCard } from '../core/srs.js';
 import { showToast, updateHeaderStats } from '../app.js';
 import { speak, speakWithCallback, isMuted } from '../core/tts.js';
@@ -333,6 +333,31 @@ function renderDialogue(contentEl, dialogue, container, lessonId, subLessonId) {
   });
 }
 
+// Create an SRS card for a vocab item, but never clobber an existing card
+// (that would wipe its spaced-repetition progress on a lesson redo).
+async function seedVocabCard(vocab, lessonId, subLessonId) {
+  if (!vocab || !vocab.word) return false;
+  const existing = await get(STORES.vocabulary, vocab.word);
+  if (existing) return false;
+  const card = createVocabularyCard(vocab.word, vocab.meaning, `${lessonId}.${subLessonId}`, {
+    gender: vocab.gender,
+    example: vocab.example
+  });
+  await set(STORES.vocabulary, card);
+  return true;
+}
+
+// Seed SRS cards for the WHOLE sub-lesson vocabulary list, not just the first
+// few shown as intro flashcards. Returns how many new cards were added.
+async function seedSubLessonVocabulary(subLesson, lessonId, subLessonId) {
+  if (!subLesson || !Array.isArray(subLesson.vocabulary)) return 0;
+  let added = 0;
+  for (const vocab of subLesson.vocabulary) {
+    if (await seedVocabCard(vocab, lessonId, subLessonId)) added++;
+  }
+  return added;
+}
+
 function renderVocabIntro(contentEl, vocab, container, lessonId, subLessonId) {
   contentEl.innerHTML = `
     <div class="exercise-prompt">New Word</div>
@@ -357,11 +382,7 @@ function renderVocabIntro(contentEl, vocab, container, lessonId, subLessonId) {
   });
 
   contentEl.querySelector('#continue-btn').addEventListener('click', async () => {
-    const card = createVocabularyCard(vocab.word, vocab.meaning, `${lessonId}.${subLessonId}`, {
-      gender: vocab.gender,
-      example: vocab.example
-    });
-    await set(STORES.vocabulary, card);
+    await seedVocabCard(vocab, lessonId, subLessonId);
 
     currentExerciseIndex++;
     renderCurrentExercise(container, lessonId, subLessonId);
@@ -639,6 +660,11 @@ function renderComplete(contentEl, data, container, lessonId, subLessonId) {
 async function completeLesson(container, lessonId, subLessonId) {
   const accuracy = gradedCount > 0 ? Math.round((correctCount / gradedCount) * 100) : 100;
   const xpEarned = 50 + correctCount * 5;
+
+  // Ensure EVERY vocab word from this sub-lesson enters spaced repetition,
+  // not just the handful shown as intro flashcards.
+  const subLesson = lessons[lessonId]?.subLessons?.[subLessonId];
+  await seedSubLessonVocabulary(subLesson, lessonId, subLessonId);
 
   await addXP(xpEarned);
   await updateStreak();
